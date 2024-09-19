@@ -1,6 +1,7 @@
 #include <packing>
 
 // https://segmentfault.com/a/1190000003920502
+// https://zhuanlan.zhihu.com/p/83355147
 
 varying vec4 vViewPosition;
 varying vec3 vNormal;
@@ -80,6 +81,7 @@ void main() {
     d = 1.0 - texture2D(uCloudTex, shadeP.xy).a * h;
   }
 
+  /* now d < shadeP.z */
   float d1 = d - shadeP.z;
   float d2 = prev_d - prev_shadeP.z;
   float w = d1 / (d1 - d2);
