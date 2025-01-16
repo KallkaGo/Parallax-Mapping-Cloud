@@ -50,6 +50,7 @@ void main() {
 
   mat3 tbn = getTangentFrame(vViewPosition.xyz, vNormal, vUv);
 
+  // 视差映射的计算是在切空间进行的（跟法线映射一样）,所以指向光源的向量(L)和指向摄像机的向量(V)应该先被变换到切空间。
   mat3 tbnInverse = inverse(tbn);
 
   vec3 viewDir = tbnInverse * (vCameraPosition - vViewPosition.xyz);
@@ -59,6 +60,8 @@ void main() {
   viewDir.z = abs(viewDir.z) + .2;
 
   viewDir.xy *= uHeight;
+
+  /* POM实现*/
 
   float linearStep = 7.;
 
