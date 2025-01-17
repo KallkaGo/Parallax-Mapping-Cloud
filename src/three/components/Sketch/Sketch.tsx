@@ -27,24 +27,33 @@ const Sketch = () => {
   const uniforms = useMemo(
     () => ({
       uCloudTex: new Uniform(cloudTex),
-      uHeight: new Uniform(0.15),
+      uHeight: new Uniform(0.2),
       uTime: new Uniform(0),
       uHeightTileSpeed: new Uniform(new Vector4(1, 1, 0.05, 0)),
       uHeightAmount: new Uniform(0.95),
-      uLightColor: new Uniform(new Color("rgb(255, 244, 214)")),
-      uLightPos: new Uniform(new Vector3(-120, 50, 100)),
+      uLightColor: new Uniform(new Color()),
+      uLightPos: new Uniform(new Vector3(-180, 100, 50)),
     }),
     []
   );
 
   useControls("color", {
     color: {
-      value: "rgb(255, 244, 214)",
+      value: "#fff4d6",
       onChange: (value) => {
         uniforms.uLightColor.value.set(value);
       },
-    },
+    }
   });
+
+ const {mode}= useControls({
+    mode: {
+      value:'POM',
+      options: ['RPM'],
+    }
+  })
+
+  console.log('mode',mode);
 
   useEffect(() => {
     useLoadedStore.setState({ ready: true });
@@ -59,8 +68,11 @@ const Sketch = () => {
       <OrbitControls domElement={controlDom} />
       <color attach={"background"} args={["black"]} />
       <mesh rotation-x={-Math.PI / 2}>
-        <planeGeometry args={[100, 100]} />
+        <planeGeometry args={[100, 100, 1, 1]} />
         <CustomShaderMaterial
+          defines={{
+            [`MODE_${mode}`]: 1
+          }}
           baseMaterial={ShaderMaterial}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}

@@ -57,19 +57,21 @@ void main() {
 
   viewDir = normalize(-viewDir);
 
-  viewDir.z = abs(viewDir.z) + .2;
+  viewDir.z = abs(viewDir.z) + .43;
 
   viewDir.xy *= uHeight;
-
-  /* POM实现*/
-
-  float linearStep = 7.;
 
   vec4 tex = texture2D(uCloudTex, shadeP2.xy);
 
   float h = tex.a * uHeightAmount;
 
-  vec3 lioffset = viewDir / (viewDir.z * linearStep);
+  vec3 lioffset =  vec3(0.);
+
+  #ifdef MODE_POM
+
+  float linearStep = 7.;
+
+  lioffset = viewDir / (viewDir.z * linearStep);
 
   float d = 1. - texture2D(uCloudTex, shadeP.xy).a * h;
 
@@ -84,12 +86,40 @@ void main() {
     d = 1.0 - texture2D(uCloudTex, shadeP.xy).a * h;
   }
 
-  /* now d < shadeP.z */
+  /* 
+    now d < shadeP.z
+    d1< 0 so d1-d2 = |d1|+|d2| 
+   */
   float d1 = d - shadeP.z;
   float d2 = prev_d - prev_shadeP.z;
   float w = d1 / (d1 - d2);
 
   shadeP = mix(shadeP, prev_shadeP, w);
+
+  #endif
+
+  #ifdef MODE_RPM
+
+  const int linearStep = 2;
+  const int binaryStep = 5;
+
+  // linear
+  lioffset = viewDir / (viewDir.z * (linearStep + 1.));
+
+  for(int k = 0; k < linearStep; k++) {
+    float d = 1.0 - texture2D(uCloudTex, vec4(shadeP.xy, 0, 0)).a * h;
+    shadeP += lioffset * step(shadeP.z, d);
+  }
+  // binary 
+  vec3 biOffset = lioffset;
+
+  for(int j = 0; j < binaryStep; j++) {
+    biOffset = biOffset * 0.5;
+    float d = 1.0 - texture2D(uCloudTex, vec4(shadeP.xy, 0, 0)).a * h;
+    shadeP += biOffset * sign(d - shadeP.z);
+  }
+
+  #endif
 
   vec3 col = texture2D(uCloudTex, shadeP.xy).rgb;
 
@@ -97,7 +127,7 @@ void main() {
 
   float NDotL = max(dot(normalize(vWorldNormal), lightDir), 0.0);
 
-  vec3 finColor = col * (NDotL * uLightColor + 1. * .65);
+  vec3 finColor = col * (NDotL * uLightColor + 1. * .55);
 
   csm_FragColor = vec4(finColor, 1.0);
 }
